@@ -1,14 +1,11 @@
 import gym
 import torch
 import random
-
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
 
 from copy import deepcopy
-
 from memory.utils import device, set_seed
 from memory.buffer import ReplayBuffer, PrioritizedReplayBuffer
 
@@ -50,7 +47,7 @@ class DQN:
         if weights is None:
             weights = torch.ones_like(Q)
 
-        td_error = torch.abs(Q - Q_target).detach() # TODO: check td error
+        td_error = torch.abs(Q - Q_target).detach()
         loss = torch.mean((Q - Q_target)**2 * weights)
 
         self.optimizer.zero_grad()
@@ -130,9 +127,9 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
             loss_count += 1
 
             if step % test_every == 0:
-                mean, std = evaluate_policy(env_name, model, episodes=5, seed=seed)
+                mean, std = evaluate_policy(env_name, model, episodes=10, seed=seed)
 
-                print(f"Episode: {episodes}, Step: {step + 1}, Reward mean: {mean:.2f}, Reward std: {std:.2f}, Loss: {total_loss / loss_count:.4f}, Eps: {eps}")
+                print(f"Episode: {episodes}, Step: {step}, Reward mean: {mean:.2f}, Reward std: {std:.2f}, Loss: {total_loss / loss_count:.4f}, Eps: {eps}")
 
                 if mean > best_reward:
                     best_reward = mean
@@ -144,40 +141,91 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
     return np.array(rewards_total), np.array(stds_total)
 
 
+def run_experiment(config, use_priority=False, n_seeds=10):
+    torch.manual_seed(0)
+    mean_rewards = []
+
+    for seed in range(n_seeds):
+        if use_priority:
+            buffer = PrioritizedReplayBuffer(**config["buffer"])
+        else:
+            buffer = ReplayBuffer(**config["buffer"])
+        model = DQN(**config["model"])
+
+        seed_reward, seed_std = train(seed=seed, model=model, buffer=buffer, **config["train"])
+        mean_rewards.append(seed_reward)
+
+    mean_rewards = np.array(mean_rewards)
+
+    return mean_rewards.mean(axis=0), mean_rewards.std(axis=0)
+
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
-    reward = []
-    for i in range(10):
-        buffer = ReplayBuffer(state_size=4, action_size=1, buffer_size=50_000)
-        model = DQN(4, 2, gamma=0.99, lr=1e-4, tau=0.01)
-        mean_rewards, _ = train("CartPole-v0", model, buffer, timesteps=50_000, start_train=5_000, batch_size=64,
-                             test_every=5000, eps_max=0.2, seed=i)
-        reward.append(mean_rewards)
+    # config = {
+    #     "buffer": {
+    #         "state_size": 8,
+    #         "action_size": 1,  # action is discrete
+    #         "buffer_size": 100_000
+    #     },
+    #     "model": {
+    #         "state_size": 8,
+    #         "action_size": 4,
+    #         "gamma": 0.99,
+    #         "lr": 1e-3,
+    #         "tau": 0.001
+    #     },
+    #     "train": {
+    #         "env_name": "LunarLander-v2",
+    #         "timesteps": 500_000,
+    #         "start_train": 10_000,
+    #         "batch_size": 128,
+    #         "test_every": 5000,
+    #         "eps_max": 0.5
+    #     }
+    # }
 
-    priority_reward = []
-    for i in range(10):
-        buffer = PrioritizedReplayBuffer(state_size=4, action_size=1, buffer_size=50_000, alpha=0.8, beta=0.3)
-        model = DQN(4, 2, gamma=0.99, lr=1e-4, tau=0.01)
-        mean_rewards, _ = train("CartPole-v0", model, buffer, timesteps=50_000, start_train=5_000, batch_size=64,
-                                test_every=5000, eps_max=0.2, seed=i)
+    config = {
+        "buffer": {
+            "state_size": 4,
+            "action_size": 1,  # action is discrete
+            "buffer_size": 50_000
+        },
+        "model": {
+            "state_size": 4,
+            "action_size": 2,
+            "gamma": 0.99,
+            "lr": 1e-4,
+            "tau": 0.01
+        },
+        "train": {
+            "env_name": "CartPole-v0",
+            "timesteps": 50_000,
+            "start_train": 5000,
+            "batch_size": 64,
+            "test_every": 5000,
+            "eps_max": 0.2
+        }
+    }
+    priority_config = deepcopy(config)
+    priority_config["buffer"].update({"alpha": 0.8, "beta": 0.3})
 
-        priority_reward.append(mean_rewards)
+    mean_reward, std_reward = run_experiment(config, n_seeds=5)
+    mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=5)
 
-    reward, priority_reward = np.array(reward), np.array(priority_reward)
+    steps = np.arange(mean_reward.shape[0]) * config["train"]["test_every"]
 
-    mean_reward, std_reward = reward.mean(axis=0), reward.std(axis=0)
-    mean_priority_reward, std_priority_reward = priority_reward.mean(axis=0), priority_reward.std(axis=0)
+    plt.plot(steps, mean_reward, label="Uniform")
+    plt.fill_between(steps, mean_reward - std_reward, mean_reward + std_reward, alpha=0.4)
+    plt.plot(steps, mean_priority_reward, label="Prioritized")
+    plt.fill_between(steps, mean_priority_reward - std_priority_reward, mean_priority_reward + std_priority_reward, alpha=0.4)
 
-    plt.plot(np.arange(reward.shape[1]) * 5000, mean_reward, label="Uniform")
-    plt.fill_between(np.arange(reward.shape[1]) * 5000, mean_reward - std_reward, mean_reward + std_reward, alpha=0.4)
-
-    plt.plot(np.arange(reward.shape[1]) * 5000, mean_priority_reward, label="Prioritized")
-    plt.fill_between(np.arange(reward.shape[1]) * 5000, mean_priority_reward - std_priority_reward, mean_priority_reward + std_priority_reward, alpha=0.4)
-    plt.title("CartPole-v0")
+    plt.legend()
+    # plt.title("CartPole-v0")
+    plt.title("LunarLander-v2")
     plt.xlabel("Transitions")
     plt.ylabel("Reward")
-    plt.legend()
-    plt.savefig("cartpole.jpg", dpi=200, bbox_inches='tight')
-    plt.show()
+    # plt.savefig("cartpole.jpg", dpi=200, bbox_inches='tight')
+    plt.savefig("lunarlander.jpg", dpi=200, bbox_inches='tight')
 
