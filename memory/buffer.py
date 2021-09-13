@@ -49,7 +49,7 @@ class PrioritizedReplayBuffer:
 
         segment = self.tree.total / batch_size
 
-        sample_idxs, data_idxs = [], []
+        sample_idxs, tree_idxs = [], []
         priorities = torch.empty(batch_size, 1, dtype=torch.float)
 
         # попробовать сэмплировать просто так, по сумме, в теории это должно работать так же?
@@ -57,10 +57,10 @@ class PrioritizedReplayBuffer:
             a, b = segment * i, segment * (i + 1) # это точно сэмплирует из всех сегментов?
 
             cumsum = random.uniform(a, b)
-            data_idx, priority, sample_idx = self.tree.get(cumsum)
+            tree_idx, priority, sample_idx = self.tree.get(cumsum)
 
-            data_idxs.append(data_idx)
             priorities[i] = priority
+            tree_idxs.append(tree_idx)
             sample_idxs.append(sample_idx)
 
         probs = priorities / self.tree.total
@@ -74,7 +74,7 @@ class PrioritizedReplayBuffer:
             self.next_state[sample_idxs].to(device()),
             self.done[sample_idxs].to(device())
         )
-        return batch, weights, data_idxs
+        return batch, weights, tree_idxs
 
     def update_priorities(self, data_idxs, priorities):
         for data_idx, priority in zip(data_idxs, priorities):

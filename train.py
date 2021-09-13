@@ -211,8 +211,8 @@ if __name__ == "__main__":
     priority_config = deepcopy(config)
     priority_config["buffer"].update({"alpha": 0.8, "beta": 0.3})
 
-    mean_reward, std_reward = run_experiment(config, n_seeds=5)
-    mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=5)
+    mean_reward, std_reward = run_experiment(config, n_seeds=10)
+    mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=10)
 
     steps = np.arange(mean_reward.shape[0]) * config["train"]["test_every"]
 

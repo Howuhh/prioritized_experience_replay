@@ -34,7 +34,7 @@ class SumTree:
 
         idx = 0
         while 2 * idx + 1 < len(self.nodes):
-            left, right = 2 * idx + 1, 2 * idx + 2
+            left, right = 2*idx + 1, 2*idx + 2
 
             if cumsum <= self.nodes[left]:
                 idx = left
