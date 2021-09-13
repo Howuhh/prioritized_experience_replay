@@ -1,13 +1,17 @@
 # Prioritized Experience Replay
 
-Simple and straightforward implementation with comments
+Simple and straightforward implementation with comments. 
+
+`SumTree` unlike other python implementations, is implemented without recursion, 
+which is nearly twice faster (based on a couple of tests in ipython).   
+`train.py` also implements a simple DQN algorithm to validate PER. 
 
 ## Results
 10 seeds, same hyperparameters, not tuned
 
 <p float="left">
-  <img src="/plots/cartpole.jpg" width="50%"/>
-  <img src="/plots/lunarlander.jpg" width="50%"/>
+  <img src="/plots/cartpole.jpg" width="30%"/>
+  <img src="/plots/lunarlander.jpg" width="30%"/>
 </p>
 
 ## TODO
