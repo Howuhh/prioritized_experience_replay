@@ -6,8 +6,8 @@ Simple and straightforward implementation with comments
 10 seeds, same hyperparameters, not tuned
 
 <p float="left">
-  <img src="/plots/cartpole.jpg"/>
-  <img src="/plots/lunarlander.jpg"/>
+  <img src="/plots/cartpole.jpg" width="50%"/>
+  <img src="/plots/lunarlander.jpg" width="50%"/>
 </p>
 
 ## TODO
