@@ -211,8 +211,8 @@ if __name__ == "__main__":
     priority_config = deepcopy(config)
     priority_config["buffer"].update({"alpha": 0.8, "beta": 0.3})
 
-    mean_reward, std_reward = run_experiment(config, n_seeds=10)
-    mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=10)
+    mean_reward, std_reward = run_experiment(config, n_seeds=5)
+    mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=5)
 
     steps = np.arange(mean_reward.shape[0]) * config["train"]["test_every"]
 
@@ -222,10 +222,10 @@ if __name__ == "__main__":
     plt.fill_between(steps, mean_priority_reward - std_priority_reward, mean_priority_reward + std_priority_reward, alpha=0.4)
 
     plt.legend()
-    # plt.title("CartPole-v0")
-    plt.title("LunarLander-v2")
+    plt.title("CartPole-v0")
+    # plt.title("LunarLander-v2")
     plt.xlabel("Transitions")
     plt.ylabel("Reward")
-    # plt.savefig("cartpole.jpg", dpi=200, bbox_inches='tight')
-    plt.savefig("lunarlander.jpg", dpi=200, bbox_inches='tight')
+    plt.savefig("cartpole.jpg", dpi=200, bbox_inches='tight')
+    # plt.savefig("lunarlander.jpg", dpi=200, bbox_inches='tight')
 

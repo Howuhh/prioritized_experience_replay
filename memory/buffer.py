@@ -14,7 +14,7 @@ class PrioritizedReplayBuffer:
         self.eps = eps
         self.alpha = alpha
         self.beta = beta
-        self.max_priority = eps  # init as eps
+        self.max_priority = eps # init priority as eps TODO: (eps + eps) ** self.alpha test on multiple seed
 
         # state, action, reward, next_state, done
         self.state = torch.empty(buffer_size, state_size, dtype=torch.float)
@@ -47,16 +47,12 @@ class PrioritizedReplayBuffer:
     def sample(self, batch_size):
         assert self.real_size >= batch_size
 
-        segment = self.tree.total / batch_size
+        cumsums = np.random.uniform(0, self.tree.total, size=batch_size)
 
         sample_idxs, tree_idxs = [], []
         priorities = torch.empty(batch_size, 1, dtype=torch.float)
 
-        # попробовать сэмплировать просто так, по сумме, в теории это должно работать так же?
-        for i in range(batch_size):
-            a, b = segment * i, segment * (i + 1) # это точно сэмплирует из всех сегментов?
-
-            cumsum = random.uniform(a, b)
+        for i, cumsum in enumerate(cumsums):
             tree_idx, priority, sample_idx = self.tree.get(cumsum)
 
             priorities[i] = priority
