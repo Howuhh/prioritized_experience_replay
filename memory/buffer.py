@@ -52,8 +52,9 @@ class PrioritizedReplayBuffer:
         sample_idxs, data_idxs = [], []
         priorities = torch.empty(batch_size, 1, dtype=torch.float)
 
+        # попробовать сэмплировать просто так, по сумме, в теории это должно работать так же?
         for i in range(batch_size):
-            a, b = segment * i, segment * (i + 1)
+            a, b = segment * i, segment * (i + 1) # это точно сэмплирует из всех сегментов?
 
             cumsum = random.uniform(a, b)
             data_idx, priority, sample_idx = self.tree.get(cumsum)
