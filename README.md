@@ -9,8 +9,8 @@ Simple and straightforward implementation with comments.
 10 seeds, same hyperparameters, not tuned
 
 <p float="left">
-  <img src="plots/cartpole.jpg" width="40%"/>
-  <img src="plots/lunarlander.jpg" width="40%"/>
+  <img src="plots/cartpole.jpg" width="50%"/>
+  <img src="plots/lunarlander.jpg" width="50%"/>
 </p>
 
 To reproduce, run
@@ -32,16 +32,12 @@ priority correspond to a larger interval in [0, p_total], so it should be enough
 
 As the graph below shows, there is no particular difference in the distribution of priorities among the two sampling methods. 
 
-<img src="plots/sampling_approaches.jpg" width="50%"/>
+<img src="plots/sampling_approaches.jpg" width="70%"/>
 
 To reproduce, run 
 ```bash
 python plots/sampling.py
 ```
-
-## TODO
-
-- add comments and references to paper sections
 
 # References
 
