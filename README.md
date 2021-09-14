@@ -1,6 +1,6 @@
 # Prioritized Experience Replay
 
-Simple and straightforward implementation with comments
+Simple and straightforward implementation with comments.
 
 ## Results
 
@@ -9,9 +9,15 @@ Simple and straightforward implementation with comments
 10 seeds, same hyperparameters, not tuned
 
 <p float="left">
-  <img src="/plots/cartpole.jpg" width="50%"/>
-  <img src="/plots/lunarlander.jpg" width="50%"/>
+  <img src="plots/cartpole.jpg" width="40%"/>
+  <img src="plots/lunarlander.jpg" width="40%"/>
 </p>
+
+To reproduce, run
+```bash
+python train.py --seeds 10 CartPole-v0
+python train.py --seeds 10 LunarLander-v2
+```
 
 ### Sampling approaches
 
@@ -26,7 +32,7 @@ priority correspond to a larger interval in [0, p_total], so it should be enough
 
 As the graph below shows, there is no particular difference in the distribution of priorities among the two sampling methods. 
 
-![sampling](plots/sampling_approaches.jpg)
+<img src="plots/sampling_approaches.jpg" width="50%"/>
 
 To reproduce, run 
 ```bash

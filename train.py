@@ -80,7 +80,7 @@ def evaluate_policy(env_name, agent, episodes=5, seed=0):
 
 def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_size=128,
           eps_max=0.1, eps_min=0.0, test_every=5000, seed=0):
-    print("Training on: ", device())
+    print(f"Training on: {env_name}, Device: {device()}, Seed: {seed}")
 
     env = gym.make(env_name)
     set_seed(env, seed=seed)
@@ -161,58 +161,69 @@ def run_experiment(config, use_priority=False, n_seeds=10):
 
 
 if __name__ == "__main__":
+    import argparse
     import matplotlib.pyplot as plt
 
-    # config = {
-    #     "buffer": {
-    #         "state_size": 8,
-    #         "action_size": 1,  # action is discrete
-    #         "buffer_size": 100_000
-    #     },
-    #     "model": {
-    #         "state_size": 8,
-    #         "action_size": 4,
-    #         "gamma": 0.99,
-    #         "lr": 1e-3,
-    #         "tau": 0.001
-    #     },
-    #     "train": {
-    #         "env_name": "LunarLander-v2",
-    #         "timesteps": 500_000,
-    #         "start_train": 10_000,
-    #         "batch_size": 128,
-    #         "test_every": 5000,
-    #         "eps_max": 0.5
-    #     }
-    # }
+    parser = argparse.ArgumentParser(description='DQN training with PER on CartPole-v0 or LunarLander-v2',
+                                     formatter_class=argparse.MetavarTypeHelpFormatter)
+    parser.add_argument('env_name', metavar='env_name', type=str, help='name of the environment for training')
+    parser.add_argument('--seeds', dest='seeds', default=10, help='number of seeds for training', type=int)
+    args = parser.parse_args()
 
-    config = {
-        "buffer": {
-            "state_size": 4,
-            "action_size": 1,  # action is discrete
-            "buffer_size": 50_000
-        },
-        "model": {
-            "state_size": 4,
-            "action_size": 2,
-            "gamma": 0.99,
-            "lr": 1e-4,
-            "tau": 0.01
-        },
-        "train": {
-            "env_name": "CartPole-v0",
-            "timesteps": 50_000,
-            "start_train": 5000,
-            "batch_size": 64,
-            "test_every": 5000,
-            "eps_max": 0.2
+    if args.env_name == "CartPole-v0":
+        config = {
+            "buffer": {
+                "state_size": 4,
+                "action_size": 1,  # action is discrete
+                "buffer_size": 50_000
+            },
+            "model": {
+                "state_size": 4,
+                "action_size": 2,
+                "gamma": 0.99,
+                "lr": 1e-4,
+                "tau": 0.01
+            },
+            "train": {
+                "env_name": "CartPole-v0",
+                "timesteps": 50_000,
+                "start_train": 5000,
+                "batch_size": 64,
+                "test_every": 5000,
+                "eps_max": 0.2
+            }
         }
-    }
+    elif args.env_name == "LunarLander-v2":
+        config = {
+            "buffer": {
+                "state_size": 8,
+                "action_size": 1,  # action is discrete
+                "buffer_size": 100_000
+            },
+            "model": {
+                "state_size": 8,
+                "action_size": 4,
+                "gamma": 0.99,
+                "lr": 1e-3,
+                "tau": 0.001
+            },
+            "train": {
+                "env_name": "LunarLander-v2",
+                "timesteps": 500_000,
+                "start_train": 10_000,
+                "batch_size": 128,
+                "test_every": 5000,
+                "eps_max": 0.5
+            }
+        }
+    else:
+        raise RuntimeError(f"Unknown env_name argument: {args.env_name}")
+
     priority_config = deepcopy(config)
     priority_config["buffer"].update({"alpha": 0.8, "beta": 0.3})
 
-    mean_reward, std_reward = run_experiment(config, n_seeds=10)
-    mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=10)
+    mean_reward, std_reward = run_experiment(config, n_seeds=args.seeds)
+    mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=args.seeds)
 
     steps = np.arange(mean_reward.shape[0]) * config["train"]["test_every"]
 
@@ -222,10 +233,7 @@ if __name__ == "__main__":
     plt.fill_between(steps, mean_priority_reward - std_priority_reward, mean_priority_reward + std_priority_reward, alpha=0.4)
 
     plt.legend()
-    plt.title("CartPole-v0")
-    # plt.title("LunarLander-v2")
+    plt.title(config["train"]["env_name"])
     plt.xlabel("Transitions")
     plt.ylabel("Reward")
-    plt.savefig("cartpole.jpg", dpi=200, bbox_inches='tight')
-    # plt.savefig("lunarlander.jpg", dpi=200, bbox_inches='tight')
-
+    plt.savefig(f"{config['train']['env_name']}.jpg", dpi=200, bbox_inches='tight')

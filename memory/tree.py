@@ -1,3 +1,14 @@
+
+# The ‘sum-tree’ data structure used here is very similar in spirit to the array representation
+# of a binary heap. However, instead of the usual heap property, the value of a parent node is
+# the sum of its children. Leaf nodes store the transition priorities and the internal nodes are
+# intermediate sums, with the parent node containing the sum over all priorities, p_total. This
+# provides a efficient way of calculating the cumulative sum of priorities, allowing O(log N) updates
+# and sampling. (Appendix B.2.1, Proportional prioritization)
+
+# Additional useful links
+# Good tutorial about SumTree data structure:  https://adventuresinmachinelearning.com/sumtree-introduction-python/
+# How to represent full binary tree as array: https://stackoverflow.com/questions/8256222/binary-tree-represented-using-array
 class SumTree:
     def __init__(self, size):
         self.nodes = [0] * (2 * size - 1)
