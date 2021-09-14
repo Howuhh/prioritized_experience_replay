@@ -2,6 +2,10 @@
 
 Simple and straightforward implementation with comments.
 
+`SumTree` unlike other python implementations, is implemented without recursion, which is nearly twice faster 
+(based on a couple of tests in ipython).   
+`train.py` also implements a simple DQN algorithm to validate PER.
+
 ## Results
 
 ### DQN with PER
