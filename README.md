@@ -10,8 +10,8 @@ which is nearly twice faster (based on a couple of tests in ipython).
 10 seeds, same hyperparameters, not tuned
 
 <p float="left">
-  <img src="/plots/cartpole.jpg" width="30%"/>
-  <img src="/plots/lunarlander.jpg" width="30%"/>
+  <img src="/plots/cartpole.jpg" width="40%"/>
+  <img src="/plots/lunarlander.jpg" width="40%"/>
 </p>
 
 ## TODO
