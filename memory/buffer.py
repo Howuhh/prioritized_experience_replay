@@ -14,7 +14,7 @@ class PrioritizedReplayBuffer:
         self.eps = eps
         self.alpha = alpha
         self.beta = beta
-        self.max_priority = eps # init priority as eps TODO: (eps + eps) ** self.alpha test on multiple seed
+        self.max_priority = eps # init priority as eps
 
         # state, action, reward, next_state, done
         self.state = torch.empty(buffer_size, state_size, dtype=torch.float)

@@ -130,6 +130,8 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
                 mean, std = evaluate_policy(env_name, model, episodes=10, seed=seed)
 
                 print(f"Episode: {episodes}, Step: {step}, Reward mean: {mean:.2f}, Reward std: {std:.2f}, Loss: {total_loss / loss_count:.4f}, Eps: {eps}")
+                if hasattr(buffer, 'max_priority'):
+                    print(f"Max priority: {buffer.max_priority}")
 
                 if mean > best_reward:
                     best_reward = mean
@@ -145,7 +147,7 @@ def run_experiment(config, use_priority=False, n_seeds=10):
     torch.manual_seed(0)
     mean_rewards = []
 
-    for seed in range(n_seeds):
+    for seed in range(5, n_seeds + 5):
         if use_priority:
             buffer = PrioritizedReplayBuffer(**config["buffer"])
         else:
