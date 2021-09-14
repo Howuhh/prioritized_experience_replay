@@ -222,10 +222,10 @@ if __name__ == "__main__":
     plt.fill_between(steps, mean_priority_reward - std_priority_reward, mean_priority_reward + std_priority_reward, alpha=0.4)
 
     plt.legend()
-    # plt.title("CartPole-v0")
-    plt.title("LunarLander-v2")
+    plt.title("CartPole-v0")
+    # plt.title("LunarLander-v2")
     plt.xlabel("Transitions")
     plt.ylabel("Reward")
-    # plt.savefig("cartpole.jpg", dpi=200, bbox_inches='tight')
-    plt.savefig("lunarlander.jpg", dpi=200, bbox_inches='tight')
+    plt.savefig("cartpole.jpg", dpi=200, bbox_inches='tight')
+    # plt.savefig("lunarlander.jpg", dpi=200, bbox_inches='tight')
 
