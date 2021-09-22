@@ -6,8 +6,8 @@ import torch.nn as nn
 import torch.optim as optim
 
 from copy import deepcopy
-from memory.utils import device, set_seed
-from memory.buffer import ReplayBuffer, PrioritizedReplayBuffer
+from memory.utils import device, set_seed, linear_schedule
+from memory.buffer import ReplayBuffer, PrioritizedReplayBuffer, NStepReplayBuffer
 
 
 class DQN:
@@ -85,6 +85,9 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
     env = gym.make(env_name)
     set_seed(env, seed=seed)
 
+    if hasattr(buffer, "reset_scheduler"):
+        buffer.reset_scheduler()
+
     rewards_total, stds_total = [], []
     loss_count, total_loss = 0, 0
 
@@ -111,7 +114,7 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
         state = next_state
 
         if step > start_train:
-            if isinstance(buffer, ReplayBuffer):
+            if isinstance(buffer, ReplayBuffer) or isinstance(buffer, NStepReplayBuffer):
                 batch = buffer.sample(batch_size)
                 loss, td_error = model.update(batch)
             elif isinstance(buffer, PrioritizedReplayBuffer):
@@ -119,7 +122,6 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
                 loss, td_error = model.update(batch, weights=weights)
 
                 buffer.update_priorities(tree_idxs, td_error.numpy())
-                buffer.beta = buffer.beta - (buffer.beta - 1.0) * step / timesteps
             else:
                 raise RuntimeError("Unknown buffer")
 
@@ -130,12 +132,12 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
                 mean, std = evaluate_policy(env_name, model, episodes=10, seed=seed)
 
                 print(f"Episode: {episodes}, Step: {step}, Reward mean: {mean:.2f}, Reward std: {std:.2f}, Loss: {total_loss / loss_count:.4f}, Eps: {eps}")
-                if hasattr(buffer, 'max_priority'):
-                    print(f"Max priority: {buffer.max_priority}")
+                # if hasattr(buffer, 'max_priority'):
+                    # print(f"Max priority: {buffer.max_priority}")
 
                 if mean > best_reward:
                     best_reward = mean
-                    model.save()
+                    # model.save()
 
                 rewards_total.append(mean)
                 stds_total.append(std)
@@ -143,13 +145,15 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
     return np.array(rewards_total), np.array(stds_total)
 
 
-def run_experiment(config, use_priority=False, n_seeds=10):
+def run_experiment(config, use_priority=False, use_nstep=False, n_seeds=10):
     torch.manual_seed(0)
     mean_rewards = []
 
     for seed in range(5, n_seeds + 5):
         if use_priority:
             buffer = PrioritizedReplayBuffer(**config["buffer"])
+        elif use_nstep:
+            buffer = NStepReplayBuffer(**config["buffer"])
         else:
             buffer = ReplayBuffer(**config["buffer"])
         model = DQN(**config["model"])
@@ -164,35 +168,13 @@ def run_experiment(config, use_priority=False, n_seeds=10):
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+    SEEDS = 1
 
-    # config = {
-    #     "buffer": {
-    #         "state_size": 8,
-    #         "action_size": 1,  # action is discrete
-    #         "buffer_size": 100_000
-    #     },
-    #     "model": {
-    #         "state_size": 8,
-    #         "action_size": 4,
-    #         "gamma": 0.99,
-    #         "lr": 1e-3,
-    #         "tau": 0.001
-    #     },
-    #     "train": {
-    #         "env_name": "LunarLander-v2",
-    #         "timesteps": 500_000,
-    #         "start_train": 10_000,
-    #         "batch_size": 128,
-    #         "test_every": 5000,
-    #         "eps_max": 0.5
-    #     }
-    # }
-
-    config = {
+    common_config = {
         "buffer": {
             "state_size": 4,
             "action_size": 1,  # action is discrete
-            "buffer_size": 50_000
+            "buffer_size": 50_000,
         },
         "model": {
             "state_size": 4,
@@ -204,30 +186,41 @@ if __name__ == "__main__":
         "train": {
             "env_name": "CartPole-v0",
             "timesteps": 50_000,
-            "start_train": 5000,
+            "start_train": 1000,
             "batch_size": 64,
             "test_every": 5000,
-            "eps_max": 0.2
+            "eps_max": 0.8,
+            "eps_min": 0.1,
         }
     }
-    priority_config = deepcopy(config)
-    priority_config["buffer"].update({"alpha": 0.8, "beta": 0.3})
 
-    mean_reward, std_reward = run_experiment(config, n_seeds=5)
-    mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=5)
+    priority_config = deepcopy(common_config)
+    # TODO: для чистоты сравнения вырубить эксплоринг, тогда все плюсы будут исключительно от приоритизации, а не рандома
+    # TODO: проверить что при alpha=0, beta=1 результат аналогичен обычному буферу
+    priority_config["buffer"].update({"alpha": 0.6, "beta": 0.4, "beta_scheduler": linear_schedule(1.0, 50_000)})
 
-    steps = np.arange(mean_reward.shape[0]) * config["train"]["test_every"]
+    # nstep_config = deepcopy(common_config)
+    # nstep_config["buffer"].update({"n_step": 2, "gamma": 0.99})
 
-    plt.plot(steps, mean_reward, label="Uniform")
-    plt.fill_between(steps, mean_reward - std_reward, mean_reward + std_reward, alpha=0.4)
+    mean_reward, std_reward = run_experiment(common_config, n_seeds=SEEDS)
+    mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=SEEDS)
+    # mean_nstep_reward, std_nstep_reward = run_experiment(nstep_config, use_nstep=True, n_seeds=SEEDS)
+
+    steps = np.arange(mean_priority_reward.shape[0]) * common_config["train"]["test_every"]
+
+    # plt.plot(steps, mean_reward, label="Uniform")
+    # plt.fill_between(steps, mean_reward - std_reward, mean_reward + std_reward, alpha=0.4)
+
     plt.plot(steps, mean_priority_reward, label="Prioritized")
     plt.fill_between(steps, mean_priority_reward - std_priority_reward, mean_priority_reward + std_priority_reward, alpha=0.4)
 
+    # plt.plot(steps, mean_nstep_reward, label=f"N-Step={str(nstep_config['buffer']['n_step'])}")
+    # plt.fill_between(steps, mean_nstep_reward - std_nstep_reward, mean_nstep_reward + std_nstep_reward, alpha=0.4)
+
     plt.legend()
     plt.title("CartPole-v0")
-    # plt.title("LunarLander-v2")
     plt.xlabel("Transitions")
     plt.ylabel("Reward")
     plt.savefig("cartpole.jpg", dpi=200, bbox_inches='tight')
-    # plt.savefig("lunarlander.jpg", dpi=200, bbox_inches='tight')
+    plt.show()
 
