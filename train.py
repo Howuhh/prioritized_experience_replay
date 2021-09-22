@@ -119,7 +119,6 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
                 loss, td_error = model.update(batch, weights=weights)
 
                 buffer.update_priorities(tree_idxs, td_error.numpy())
-                buffer.beta = buffer.beta - (buffer.beta - 1.0) * step / timesteps
             else:
                 raise RuntimeError("Unknown buffer")
 

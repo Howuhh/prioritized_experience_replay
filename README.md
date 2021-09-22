@@ -12,6 +12,8 @@ Simple and straightforward implementation with comments.
 
 10 seeds, same hyperparameters, not tuned
 
+**WARN**: all plots have to be recalculated because I found a bug in beta schedule. In progress.
+
 <p float="left">
   <img src="plots/cartpole.jpg" width="50%"/>
   <img src="plots/lunarlander.jpg" width="50%"/>
