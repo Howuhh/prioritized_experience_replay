@@ -78,7 +78,7 @@ def evaluate_policy(env_name, agent, episodes=5, seed=0):
     return np.mean(returns), np.std(returns)
 
 
-def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_size=128,
+def train(env_name, model, buffer, timesteps=200_000, batch_size=128,
           eps_max=0.1, eps_min=0.0, test_every=5000, seed=0):
     print("Training on: ", device())
 
@@ -113,7 +113,7 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
 
         state = next_state
 
-        if step > start_train:
+        if step > batch_size:
             if isinstance(buffer, ReplayBuffer) or isinstance(buffer, NStepReplayBuffer):
                 batch = buffer.sample(batch_size)
                 loss, td_error = model.update(batch)
@@ -132,15 +132,15 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
                 mean, std = evaluate_policy(env_name, model, episodes=10, seed=seed)
 
                 print(f"Episode: {episodes}, Step: {step}, Reward mean: {mean:.2f}, Reward std: {std:.2f}, Loss: {total_loss / loss_count:.4f}, Eps: {eps}")
-                # if hasattr(buffer, 'max_priority'):
-                    # print(f"Max priority: {buffer.max_priority}")
 
                 if mean > best_reward:
                     best_reward = mean
-                    # model.save()
 
                 rewards_total.append(mean)
                 stds_total.append(std)
+
+    if hasattr(buffer, "reset_scheduler"):
+        print("Beta: ", buffer.beta_scheduler(buffer.beta))
 
     return np.array(rewards_total), np.array(stds_total)
 
@@ -149,7 +149,7 @@ def run_experiment(config, use_priority=False, use_nstep=False, n_seeds=10):
     torch.manual_seed(0)
     mean_rewards = []
 
-    for seed in range(5, n_seeds + 5):
+    for seed in range(n_seeds):
         if use_priority:
             buffer = PrioritizedReplayBuffer(**config["buffer"])
         elif use_nstep:
@@ -168,7 +168,7 @@ def run_experiment(config, use_priority=False, use_nstep=False, n_seeds=10):
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    SEEDS = 1
+    SEEDS = 10
 
     common_config = {
         "buffer": {
@@ -186,18 +186,15 @@ if __name__ == "__main__":
         "train": {
             "env_name": "CartPole-v0",
             "timesteps": 50_000,
-            "start_train": 1000,
             "batch_size": 64,
             "test_every": 5000,
-            "eps_max": 0.8,
-            "eps_min": 0.1,
+            "eps_max": 0.5,
+            "eps_min": 0.05,
         }
     }
 
     priority_config = deepcopy(common_config)
-    # TODO: для чистоты сравнения вырубить эксплоринг, тогда все плюсы будут исключительно от приоритизации, а не рандома
-    # TODO: проверить что при alpha=0, beta=1 результат аналогичен обычному буферу
-    priority_config["buffer"].update({"alpha": 0.6, "beta": 0.4, "beta_scheduler": linear_schedule(1.0, 50_000)})
+    priority_config["buffer"].update({"alpha": 0.7, "beta": 0.4, "beta_scheduler": linear_schedule(1.0, 50_000)})
 
     # nstep_config = deepcopy(common_config)
     # nstep_config["buffer"].update({"n_step": 2, "gamma": 0.99})
@@ -208,8 +205,8 @@ if __name__ == "__main__":
 
     steps = np.arange(mean_priority_reward.shape[0]) * common_config["train"]["test_every"]
 
-    # plt.plot(steps, mean_reward, label="Uniform")
-    # plt.fill_between(steps, mean_reward - std_reward, mean_reward + std_reward, alpha=0.4)
+    plt.plot(steps, mean_reward, label="Uniform")
+    plt.fill_between(steps, mean_reward - std_reward, mean_reward + std_reward, alpha=0.4)
 
     plt.plot(steps, mean_priority_reward, label="Prioritized")
     plt.fill_between(steps, mean_priority_reward - std_priority_reward, mean_priority_reward + std_priority_reward, alpha=0.4)

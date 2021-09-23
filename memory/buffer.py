@@ -15,7 +15,7 @@ class PrioritizedReplayBuffer:
         self.eps = eps
         self.alpha = alpha
         self.beta = beta
-        self.max_priority = eps # init priority as eps
+        self.max_priority = eps ** alpha # init priority as 0
         self.beta_scheduler = beta_scheduler if beta_scheduler is not None else lambda x: x
 
         # state, action, reward, next_state, done
