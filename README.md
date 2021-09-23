@@ -10,9 +10,9 @@ Simple and straightforward implementation with comments.
 
 ### DQN with PER
 
-10 seeds, same hyperparameters, not tuned
+10 seeds, same not tuned hyperparameters, linear beta schedule -> 1.0
 
-**WARN**: all plots have to be recalculated because I found a bug in beta schedule. In progress.
+**WARN**: all plots have to be recalculated because I found a bug in beta schedule. In progress. CartPole-v0 is updated. 
 
 <p float="left">
   <img src="plots/cartpole.jpg" width="50%"/>

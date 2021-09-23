@@ -78,7 +78,7 @@ def evaluate_policy(env_name, agent, episodes=5, seed=0):
     return np.mean(returns), np.std(returns)
 
 
-def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_size=128,
+def train(env_name, model, buffer, timesteps=200_000, batch_size=128,
           eps_max=0.1, eps_min=0.0, test_every=5000, seed=0):
     print(f"Training on: {env_name}, Device: {device()}, Seed: {seed}")
 
@@ -110,7 +110,7 @@ def train(env_name, model, buffer, timesteps=200_000, start_train=1000, batch_si
 
         state = next_state
 
-        if step > start_train:
+        if step > batch_size:
             if isinstance(buffer, ReplayBuffer):
                 batch = buffer.sample(batch_size)
                 loss, td_error = model.update(batch)
@@ -186,10 +186,10 @@ if __name__ == "__main__":
             "train": {
                 "env_name": "CartPole-v0",
                 "timesteps": 50_000,
-                "start_train": 5000,
                 "batch_size": 64,
                 "test_every": 5000,
-                "eps_max": 0.2
+                "eps_max": 0.5,
+                "eps_min": 0.05
             }
         }
     elif args.env_name == "LunarLander-v2":
@@ -219,7 +219,7 @@ if __name__ == "__main__":
         raise RuntimeError(f"Unknown env_name argument: {args.env_name}")
 
     priority_config = deepcopy(config)
-    priority_config["buffer"].update({"alpha": 0.8, "beta": 0.3})
+    priority_config["buffer"].update({"alpha": 0.7, "beta": 0.4})
 
     mean_reward, std_reward = run_experiment(config, n_seeds=args.seeds)
     mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=args.seeds)
