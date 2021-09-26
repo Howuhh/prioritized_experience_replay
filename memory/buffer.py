@@ -151,7 +151,7 @@ class NStepReplayBuffer:
         if len(self.n_step_buffer) < self.n_step:
             return
 
-        state, action = self.n_step_buffer[0][:2]
+        state, action, _, _, _ = self.n_step_buffer[0]
         reward, next_state, done = self.get_n_step_return(self.n_step_buffer, self.gamma)
 
         self.state[self.count] = torch.as_tensor(state, dtype=torch.float)
@@ -177,14 +177,14 @@ class NStepReplayBuffer:
         return n_reward, n_next_state, n_done
 
     def sample(self, batch_size):
-        assert self.real_size >= batch_size
+        assert self.real_size >= batch_size, f"real size: {self.real_size}"
 
         sample_idxs = np.random.choice(self.real_size, batch_size, replace=False)
-        batch = (
+
+        return (
             self.state[sample_idxs].to(device()),
             self.action[sample_idxs].to(device()),
             self.reward[sample_idxs].to(device()),
             self.next_state[sample_idxs].to(device()),
             self.done[sample_idxs].to(device())
         )
-        return batch

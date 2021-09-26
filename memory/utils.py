@@ -7,10 +7,9 @@ import numpy as np
 def linear_schedule(max_value, total_steps):
     def inner(value):
         inner.calls += 1
-        return value + (max_value - value) * inner.calls / total_steps
+        return min(max_value, value + (max_value - value) * inner.calls / total_steps)
     inner.calls = 0
     return inner
-
 
 
 def set_seed(env, seed=0):
