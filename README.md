@@ -10,19 +10,15 @@ Simple and straightforward implementation with comments.
 
 ### DQN with PER
 
-10 seeds, same not tuned hyperparameters, no beta schedule
-
-**WARN**: all plots have to be recalculated because I found a bug in beta schedule. In progress. CartPole-v0 is updated. 
+10 seeds, not tuned hyperparameters, no beta schedule
 
 <p float="left">
   <img src="plots/CartPole-v0.jpg" width="50%"/>
-  <img src="plots/lunarlander.jpg" width="50%"/>
 </p>
 
 To reproduce, run
 ```bash
 python train.py --seeds 10 CartPole-v0
-python train.py --seeds 10 LunarLander-v2
 ```
 
 ### Sampling approaches
