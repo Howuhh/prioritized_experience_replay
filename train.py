@@ -193,31 +193,31 @@ if __name__ == "__main__":
         }
     }
 
-    # priority_config = deepcopy(common_config)
-    # priority_config["buffer"].update({"alpha": 0.7, "beta": 0.4, "beta_scheduler": linear_schedule(1.0, 50_000)})
+    priority_config = deepcopy(common_config)
+    priority_config["buffer"].update({"alpha": 0.7, "beta": 0.4, "beta_scheduler": linear_schedule(1.0, 50_000)})
 
     nstep_config = deepcopy(common_config)
     nstep_config["buffer"].update({"n_step": 3, "gamma": 0.99})
 
-    # mean_reward, std_reward = run_experiment(common_config, n_seeds=SEEDS)
-    # mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=SEEDS)
+    mean_reward, std_reward = run_experiment(common_config, n_seeds=SEEDS)
+    mean_priority_reward, std_priority_reward = run_experiment(priority_config, use_priority=True, n_seeds=SEEDS)
     mean_nstep_reward, std_nstep_reward = run_experiment(nstep_config, use_nstep=True, n_seeds=SEEDS)
 
     steps = np.arange(mean_nstep_reward.shape[0]) * common_config["train"]["test_every"]
-    #
-    # plt.plot(steps, mean_reward, label="Uniform")
-    # plt.fill_between(steps, mean_reward - std_reward, mean_reward + std_reward, alpha=0.4)
-    #
-    # plt.plot(steps, mean_priority_reward, label="Prioritized")
-    # plt.fill_between(steps, mean_priority_reward - std_priority_reward, mean_priority_reward + std_priority_reward, alpha=0.4)
+    
+    plt.plot(steps, mean_reward, label="Uniform")
+    plt.fill_between(steps, mean_reward - std_reward, mean_reward + std_reward, alpha=0.4)
+    
+    plt.plot(steps, mean_priority_reward, label="Prioritized")
+    plt.fill_between(steps, mean_priority_reward - std_priority_reward, mean_priority_reward + std_priority_reward, alpha=0.4)
 
     plt.plot(steps, mean_nstep_reward, label=f"N-Step={str(nstep_config['buffer']['n_step'])}")
     plt.fill_between(steps, mean_nstep_reward - std_nstep_reward, mean_nstep_reward + std_nstep_reward, alpha=0.4)
 
-    # plt.legend()
-    # plt.title("CartPole-v0")
-    # plt.xlabel("Transitions")
-    # plt.ylabel("Reward")
-    # plt.savefig("cartpole.jpg", dpi=200, bbox_inches='tight')
-    # plt.show()
+    plt.legend()
+    plt.title("CartPole-v0")
+    plt.xlabel("Transitions")
+    plt.ylabel("Reward")
+    plt.savefig("cartpole.jpg", dpi=200, bbox_inches='tight')
+    plt.show()
 
