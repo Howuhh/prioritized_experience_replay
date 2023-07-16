@@ -69,10 +69,11 @@ def evaluate_policy(env_name, agent, episodes=5, seed=0):
 
     returns = []
     for _ in range(episodes):
-        done, state, total_reward = False, env.reset(), 0
+        done, total_reward = False, 0
+        state, _ = env.reset(seed=seed)
 
         while not done:
-            state, reward, done, _ = env.step(agent.act(state))
+            state, reward, done, _, _ = env.step(agent.act(state))
             total_reward += reward
         returns.append(total_reward)
     return np.mean(returns), np.std(returns)
@@ -83,7 +84,6 @@ def train(env_name, model, buffer, timesteps=200_000, batch_size=128,
     print(f"Training on: {env_name}, Device: {device()}, Seed: {seed}")
 
     env = gym.make(env_name)
-    set_seed(env, seed=seed)
 
     rewards_total, stds_total = [], []
     loss_count, total_loss = 0, 0
@@ -91,11 +91,13 @@ def train(env_name, model, buffer, timesteps=200_000, batch_size=128,
     episodes = 0
     best_reward = -np.inf
 
-    done, state = False, env.reset()
+    done = False
+    state, _ = env.reset(seed=seed)
 
     for step in range(1, timesteps + 1):
         if done:
-            done, state = False, env.reset()
+            done = False
+            state, _ = env.reset(seed=seed)
             episodes += 1
 
         eps = eps_max - (eps_max - eps_min) * step / timesteps
@@ -105,7 +107,7 @@ def train(env_name, model, buffer, timesteps=200_000, batch_size=128,
         else:
             action = model.act(state)
 
-        next_state, reward, done, _ = env.step(action)
+        next_state, reward, done, _, _ = env.step(action)
         buffer.add((state, action, reward, next_state, int(done)))
 
         state = next_state
