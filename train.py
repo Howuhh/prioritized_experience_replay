@@ -73,7 +73,8 @@ def evaluate_policy(env_name, agent, episodes=5, seed=0):
         state, _ = env.reset(seed=seed + ep)
 
         while not done:
-            state, reward, done, _, _ = env.step(agent.act(state))
+            state, reward, terminated, truncated, _ = env.step(agent.act(state))
+            done = terminated or truncated
             total_reward += reward
         returns.append(total_reward)
     return np.mean(returns), np.std(returns)
@@ -107,7 +108,8 @@ def train(env_name, model, buffer, timesteps=200_000, batch_size=128,
         else:
             action = model.act(state)
 
-        next_state, reward, done, _, _ = env.step(action)
+        next_state, reward, terminated, truncated, _ = env.step(action)
+        done = terminated or truncated
         buffer.add((state, action, reward, next_state, int(done)))
 
         state = next_state
