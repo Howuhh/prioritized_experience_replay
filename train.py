@@ -68,9 +68,9 @@ def evaluate_policy(env_name, agent, episodes=5, seed=0):
     set_seed(env, seed=seed)
 
     returns = []
-    for _ in range(episodes):
+    for ep in range(episodes):
         done, total_reward = False, 0
-        state, _ = env.reset(seed=seed)
+        state, _ = env.reset(seed=seed + ep)
 
         while not done:
             state, reward, done, _, _ = env.step(agent.act(state))
