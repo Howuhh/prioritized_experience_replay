@@ -1,0 +1,4 @@
+gym>=0.26.0
+matplotlib
+numpy
+torch
