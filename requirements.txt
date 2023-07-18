@@ -1,0 +1,4 @@
+gymnasium
+matplotlib
+numpy
+torch
